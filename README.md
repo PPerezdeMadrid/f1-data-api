@@ -1,7 +1,3 @@
-Claro, aquí tienes la traducción al inglés de tu README:
-
----
-
 # 📌 F1 Data API
 
 🚀 **F1 Data API** provides access to historical Formula 1 data. Ideal for developers, analysts, and enthusiasts who want to integrate race statistics, driver and team information, and more into their projects.
