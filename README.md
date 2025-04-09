@@ -28,7 +28,10 @@ curl -X GET "https://api.f1data.com/races/2024" -H "Authorization: Bearer YOUR_A
 ```
 
 ## Diseño
-Puedes encontrar el diseño de la API en este enlace `Design`[!](https://github.com/PPerezdeMadrid/f1-data-api/tree/main/Design)
+Puedes encontrar el diseño de la API en este enlace [Design Doc](Design/design_document.xlsx).
+
+![](img/methods.png)
+
 
 ## 👩‍💻 Desarrolladores  
 Este proyecto ha sido desarrollado por:  
