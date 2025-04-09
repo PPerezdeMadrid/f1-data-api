@@ -1,5 +1,8 @@
 # 📌 F1 Data API  
 
+- Pasarlo a inglés
+- Meter enlace a Design
+
 🚀 **F1 Data API** proporciona acceso a datos históricos de la Fórmula 1. Ideal para desarrolladores, analistas y entusiastas que quieran integrar estadísticas de carreras, información de pilotos, equipos y más en sus proyectos.  
 
 
@@ -12,7 +15,7 @@
 
 ## 🚀 Instalación  
 ```bash
-git clone https://github.com/usuario/f1-data-api.git  
+git clone https://github.com/pperezdem/f1-data-api.git  
 cd f1-data-api  
 npm install 
 ```
@@ -24,6 +27,8 @@ Consulta la documentación completa en [Wiki](#) o prueba los endpoints con:
 curl -X GET "https://api.f1data.com/races/2024" -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
+## Diseño
+Puedes encontrar el diseño de la API en este enlace `Design`[!](https://github.com/PPerezdeMadrid/f1-data-api/tree/main/Design)
 
 ## 👩‍💻 Desarrolladores  
 Este proyecto ha sido desarrollado por:  

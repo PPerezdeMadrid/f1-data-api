@@ -1,0 +1,366 @@
+openapi: 3.0.3
+info:
+  title: Race & Lap API
+  version: 1.0.0
+
+paths:
+  /races:
+    get:
+      summary: Get all races
+      responses:
+        '200':
+          description: List of races
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  races:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Race'
+
+  /race:
+    post:
+      summary: Create a race
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Race'
+      responses:
+        '201':
+          description: Race created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /race/{id_race}:
+    get:
+      summary: Get a race by ID
+      parameters:
+        - $ref: '#/components/parameters/RaceId'
+      responses:
+        '200':
+          description: Race data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Race'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete a race
+      parameters:
+        - $ref: '#/components/parameters/RaceId'
+      responses:
+        '200':
+          description: Race deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update a race
+      parameters:
+        - $ref: '#/components/parameters/RaceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Race'
+      responses:
+        '200':
+          description: Race updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /drivers:
+    get:
+      summary: Get all drivers (URIs)
+      responses:
+        '200':
+          description: List of driver URIs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  drivers:
+                    type: array
+                    items:
+                      type: string
+
+  /drivers/{id_race}:
+    get:
+      summary: Get all drivers in a race (with optional filters)
+      parameters:
+        - $ref: '#/components/parameters/RaceId'
+        - in: query
+          name: driverCode
+          schema:
+            type: string
+          description: Filter by driver code
+        - in: query
+          name: team
+          schema:
+            type: string
+          description: Filter by team name
+      responses:
+        '200':
+          description: List of drivers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  drivers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Driver'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /driver/{id_driver}:
+    get:
+      summary: Get driver by ID
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      responses:
+        '200':
+          description: Driver found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      summary: Add a driver
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Driver'
+      responses:
+        '201':
+          description: Driver created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      summary: Delete a driver
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      responses:
+        '200':
+          description: Driver deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update a driver
+      parameters:
+        - $ref: '#/components/parameters/DriverId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Driver'
+      responses:
+        '200':
+          description: Driver updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /race/{id_race}/laps:
+    get:
+      summary: Get all laps of a race
+      parameters:
+        - $ref: '#/components/parameters/RaceId'
+      responses:
+        '200':
+          description: List of laps
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  laps:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Lap'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /race/{id_race}/lap/{lap_number}:
+    get:
+      summary: Get a lap from a race (with optional filter by driver)
+      parameters:
+        - $ref: '#/components/parameters/RaceId'
+        - name: lap_number
+          in: path
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: driverCode
+          schema:
+            type: string
+          description: Filter by driver code
+      responses:
+        '200':
+          description: Lap information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lap_number:
+                    type: integer
+                  times:
+                    $ref: '#/components/schemas/Lap'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    RaceId:
+      name: id_race
+      in: path
+      required: true
+      schema:
+        type: integer
+    DriverId:
+      name: id_driver
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Race:
+      type: object
+      required: [season, raceName, raceType]
+      properties:
+        season:
+          type: integer
+        raceName:
+          type: string
+        raceType:
+          type: string
+
+    Driver:
+      type: object
+      required: [code, team]
+      properties:
+        driverNumber:
+          type: integer
+        code:
+          type: string
+        team:
+          type: string
+        nationality:
+          type: string
+
+    Lap:
+      type: object
+      required: [lapNumber, driverCode]
+      properties:
+        lapNumber:
+          type: integer
+        driverCode:
+          type: string
+        position:
+          type: integer
+        lapTime:
+          type: string
+        isPersonalBest:
+          type: boolean
+        sector1Time:
+          type: string
+        sector2Time:
+          type: string
+        sector3Time:
+          type: string
+        compound:
+          type: string
+        pitInTime:
+          type: string
+        pitOutTime:
+          type: string
+        pitStopDuration:
+          type: string
+        finishingPosition:
+          type: integer
+        gridPosition:
+          type: integer
+        finalStatus:
+          type: string
+
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+    CreatedResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        id:
+          type: integer
