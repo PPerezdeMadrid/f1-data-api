@@ -28,7 +28,7 @@ curl -X GET "https://api.f1data.com/races/2024" -H "Authorization: Bearer YOUR_A
 ```
 
 ## Diseño
-Puedes encontrar el diseño de la API en este enlace [Design Doc](Design/design_document.xlsx).
+Puedes encontrar el diseño de la API en este enlace [Design Doc](Design/openapi-f1data.yaml).
 
 ![](img/methods.png)
 
