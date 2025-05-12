@@ -1,6 +1,7 @@
 const config = require('./config');
 const logger = require('./logger');
 const ExpressServer = require('./expressServer');
+const mongoose = require('mongoose');
 
 const launchServer = async () => {
   try {
@@ -11,6 +12,14 @@ const launchServer = async () => {
     logger.error('Express Server failure', error.message);
     await this.close();
   }
+  
+  mongoose.connect('mongodb://localhost:27017/f1-data-db', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
+  .then(() => {
+    console.log('Establecida la conexión con la bbdd');
+  });
 };
 
 launchServer().catch(e => logger.error(e));
