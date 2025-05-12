@@ -1,0 +1,3 @@
+Como se ha generado el proyecto:
+    npm install @openapitools/openapi-generator-cli --save-dev
+    npx openapi-generator-cli generate     -i openapi.yml     -g nodejs-express-server     -o f1-data-api
