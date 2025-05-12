@@ -13,13 +13,11 @@ const launchServer = async () => {
     await this.close();
   }
   
-  mongoose.connect('mongodb://localhost:27017/f1-data-db', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
+  mongoose.connect('mongodb://localhost:27017/f1-data-db')
   .then(() => {
     console.log('Establecida la conexión con la bbdd');
   });
+  
 };
 
 launchServer().catch(e => logger.error(e));

@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 const Service = require('./Service');
+const mongoose = require('mongoose');
 
 /**
 * Delete a driver
@@ -7,12 +8,19 @@ const Service = require('./Service');
 * idUnderscoredriver Integer 
 * returns Message
 * */
-const driverIdDriverDELETE = ({ idUnderscoredriver }) => new Promise(
+const driverIdDriverDELETE = ({ id_driver }) => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-        idUnderscoredriver,
-      }));
+      //Supongo que nos referiamos a driverNumber y no a _id
+      const result = await mongoose.connection.db.collection('drivers').deleteOne({ driverNumber: parseInt(id_driver) });
+
+      if(result.deletedCount === 0){
+        return reject(Service.rejectResponse(
+          'Driver not found',
+          404
+        ));
+      }
+      return resolve(Service.successResponse({ message: 'Driver deleted successfully' }));  
     } catch (e) {
       reject(Service.rejectResponse(
         e.message || 'Invalid input',
@@ -27,12 +35,19 @@ const driverIdDriverDELETE = ({ idUnderscoredriver }) => new Promise(
 * idUnderscoredriver Integer 
 * returns Driver
 * */
-const driverIdDriverGET = ({ idUnderscoredriver }) => new Promise(
+const driverIdDriverGET = ({ id_driver }) => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-        idUnderscoredriver,
-      }));
+      //Supongo que nos referiamos a driverNumber y no a _id
+      const driver = await mongoose.connection.db.collection('drivers').findOne({ driverNumber: parseInt(id_driver) }, { projection: { _id: 0 } });
+
+      if(!driver){
+        return reject(Service.rejectResponse(
+          'Driver not found',
+          404
+        ));
+      }
+      return resolve(Service.successResponse(driver));
     } catch (e) {
       reject(Service.rejectResponse(
         e.message || 'Invalid input',
