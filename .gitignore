@@ -52,3 +52,9 @@ swagger.yaml
 *.tmp
 *.swp
 *.swo
+
+# Virtual environment
+.venv
+
+# Data files generated w/ DataJSON.py
+src/DataJSON/
