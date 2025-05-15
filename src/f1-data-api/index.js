@@ -13,7 +13,7 @@ const launchServer = async () => {
     await this.close();
   }
   
-  mongoose.connect('mongodb://localhost:27017/f1-data-db')
+  mongoose.connect('mongodb://localhost:27017/f1-data')
   .then(() => {
     console.log('Establecida la conexión con la bbdd');
   });

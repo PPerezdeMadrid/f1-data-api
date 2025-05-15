@@ -16,7 +16,7 @@ paths:
                 $ref: '#/components/schemas/_races_get_200_response'
           description: List of races
       summary: Get all races
-      x-eov-operation-handler: controllers/DefaultController
+      x-eov-operation-handler: controllers/race
   /race:
     post:
       operationId: racePOST
