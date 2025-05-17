@@ -57,4 +57,4 @@ swagger.yaml
 .venv
 
 # Data files generated w/ DataJSON.py
-src/DataJSON/
+src/DataScripts/*.json
