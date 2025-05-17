@@ -243,11 +243,11 @@ const raceIdRaceDELETE = ({ idUnderscorerace }) => new Promise(
 * idUnderscorerace Integer 
 * returns Race
 * */
-const raceIdRaceGET = ({ idUnderscorerace }) => new Promise(
+const raceIdRaceGET = ({ id_race }) => new Promise(
   async (resolve, reject) => {
     try {
       const race = await mongoose.connection.db.collection('races')
-        .findOne({ raceId: parseInt(idUnderscorerace) }, { projection: { _id: 0 } });
+        .findOne({ id_race: parseInt(id_race) }, { projection: { _id: 0 } });
 
       if (!race) {
         return reject(Service.rejectResponse('Race not found', 404));
