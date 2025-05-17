@@ -43,7 +43,7 @@ const driverIdDriverGET = ({ id_driver }) => new Promise(
   async (resolve, reject) => {
     try {
       //Supongo que nos referiamos a driverNumber y no a _id
-      const driver = await mongoose.connection.db.collection('drivers').findOne({ driverNumber: parseInt(id_driver) }, { projection: { _id: 0 } });
+      const driver = await mongoose.connection.db.collection('drivers').findOne({ id_driver: parseInt(id_driver) }, { projection: { _id: 0 } });
 
       if(!driver){
         return reject(Service.rejectResponse(
@@ -267,6 +267,7 @@ const raceIdRaceGET = ({ id_race }) => new Promise(
 * lapUnderscorenumber Integer 
 * driverCode String Filter by driver code (optional)
 * returns _race__id_race__lap__lap_number__get_200_response
++ /race/{id_race}/lap/{lap_number}:
 * */
 const raceIdRaceLapLapNumberGET = ({ idUnderscorerace, lapUnderscorenumber, driverCode }) => new Promise(
   async (resolve, reject) => {
