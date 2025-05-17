@@ -128,6 +128,7 @@ const driverIdDriverPUT = ({ idUnderscoredriver, driver }) => new Promise(
 *
 * returns _drivers_get_200_response
 * */
+/** Sin Paginación:  
 const driversGET = () => new Promise(
   async (resolve, reject) => {
     try {
@@ -136,6 +137,32 @@ const driversGET = () => new Promise(
         .toArray();
 
       return resolve(Service.successResponse({ drivers }));
+    } catch (e) {
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+    }
+  },
+);
+*/
+const driversGET = ({ offset = 0, limit = 10 }) => new Promise(
+  async (resolve, reject) => {
+    try {
+      offset = parseInt(offset);
+      limit = parseInt(limit);
+
+      const drivers = await mongoose.connection.db.collection('drivers')
+        .find({}, { projection: { _id: 0 } })
+        .skip(offset)
+        .limit(limit)
+        .toArray();
+
+      const total = await mongoose.connection.db.collection('drivers').countDocuments();
+
+      return resolve(Service.successResponse({ 
+        offset,
+        limit,
+        total,
+        drivers 
+      }));
     } catch (e) {
       reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }

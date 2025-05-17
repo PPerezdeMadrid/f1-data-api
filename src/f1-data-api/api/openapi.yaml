@@ -142,6 +142,21 @@ paths:
       tags:
         - Drivers
       operationId: driversGET
+      parameters:
+      - name: offset
+        in: query
+        description: Número de resultados a omitir (para paginación)
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+      - name: limit
+        in: query
+        description: Número de resultados a devolver
+        required: false
+        schema:
+          type: integer
+          minimum: 1
       responses:
         "200":
           content:
