@@ -44,7 +44,7 @@ def process_drivers(drivers_data_path, drivers_teams_path):
     all_drivers = sorted(set(driver_numbers.keys()) | set(driver_teams.keys()))
     for i, driver in enumerate(all_drivers):
         entry = {
-            "id_driver": f"driver_{i}",
+            "id_driver": i,
             "driverNumber": driver_numbers.get(driver),
             "code": driver,
             "team": driver_teams.get(driver)
@@ -63,9 +63,8 @@ def process_laps(lap_file):
 
     with open(lap_file, mode='r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
-        for i, row in enumerate(reader):
+        for row in reader:
             lap = {
-                "id_lap": f"lap_{i}",
                 "lapNumber": safe_int(row.get("LapNumber")),
                 "driverCode": clean_str(row.get("Driver")),
                 "position": safe_int(row.get("Position")),
@@ -111,7 +110,7 @@ def process_races(lap_file):
     races = []
     for i, (season, race_name, race_type) in enumerate(sorted(unique_races)):
         races.append({
-            "id_race": f"race_{i}",
+            "id_race": i,
             "season": season,
             "raceName": race_name,
             "raceType": race_type
