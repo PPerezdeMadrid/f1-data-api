@@ -41,9 +41,10 @@ def process_drivers(drivers_data_path, drivers_teams_path):
                     driver_teams[driver] = team
 
     drivers = []
-    all_drivers = set(driver_numbers.keys()) | set(driver_teams.keys())
-    for driver in sorted(all_drivers):
+    all_drivers = sorted(set(driver_numbers.keys()) | set(driver_teams.keys()))
+    for i, driver in enumerate(all_drivers):
         entry = {
+            "id_driver": f"driver_{i}",
             "driverNumber": driver_numbers.get(driver),
             "code": driver,
             "team": driver_teams.get(driver)
@@ -54,7 +55,7 @@ def process_drivers(drivers_data_path, drivers_teams_path):
     with open(OUTPUT_DRIVERS_JSON, "w", encoding="utf-8") as f:
         json.dump(drivers, f, indent=2)
 
-    print(f"{len(drivers)} pilotos guardados en {OUTPUT_DRIVERS_JSON}")
+    print(f"{len(drivers)} drivers saved to {OUTPUT_DRIVERS_JSON}")
 
 # --- Función para procesar laps ---
 def process_laps(lap_file):
@@ -62,8 +63,9 @@ def process_laps(lap_file):
 
     with open(lap_file, mode='r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
-        for row in reader:
+        for i, row in enumerate(reader):
             lap = {
+                "id_lap": f"lap_{i}",
                 "lapNumber": safe_int(row.get("LapNumber")),
                 "driverCode": clean_str(row.get("Driver")),
                 "position": safe_int(row.get("Position")),
@@ -86,7 +88,7 @@ def process_laps(lap_file):
     with open(OUTPUT_LAPS_JSON, "w", encoding="utf-8") as out:
         json.dump(laps, out, indent=2)
 
-    print(f"{len(laps)} vueltas guardadas en {OUTPUT_LAPS_JSON}")
+    print(f"{len(laps)} laps saved to {OUTPUT_LAPS_JSON}")
 
 # --- Función para procesar carreras ---
 def process_races(lap_file):
@@ -107,8 +109,9 @@ def process_races(lap_file):
                 continue
 
     races = []
-    for season, race_name, race_type in sorted(unique_races):
+    for i, (season, race_name, race_type) in enumerate(sorted(unique_races)):
         races.append({
+            "id_race": f"race_{i}",
             "season": season,
             "raceName": race_name,
             "raceType": race_type
@@ -117,7 +120,7 @@ def process_races(lap_file):
     with open(OUTPUT_RACES_JSON, mode="w", encoding="utf-8") as out:
         json.dump(races, out, indent=2)
 
-    print(f"{len(races)} carreras guardadas en {OUTPUT_RACES_JSON}")
+    print(f"{len(races)} races saved to {OUTPUT_RACES_JSON}")
 
 # --- Función principal ---
 def main():
