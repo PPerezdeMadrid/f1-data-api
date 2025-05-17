@@ -71,18 +71,30 @@ const driverIdDriverGET = ({ id_driver }) => new Promise(
 const driverIdDriverPOST = ({ idUnderscoredriver, driver }) => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-        idUnderscoredriver,
-        driver,
+      // Aquí asumimos que idUnderscoredriver es el número de piloto y debe coincidir con driver.driveNumber
+      if (!driver) {
+        return reject(Service.rejectResponse('Driver data is required', 400));
+      }
+
+      driver.driveNumber = parseInt(idUnderscoredriver);
+
+      const existing = await mongoose.connection.db.collection('drivers').findOne({ driveNumber: driver.driveNumber });
+      if (existing) {
+        return reject(Service.rejectResponse('Driver with this number already exists', 409));
+      }
+
+      const result = await mongoose.connection.db.collection('drivers').insertOne(driver);
+
+      return resolve(Service.successResponse({
+        message: 'Driver created successfully',
+        insertedId: result.insertedId,
       }));
     } catch (e) {
-      reject(Service.rejectResponse(
-        e.message || 'Invalid input',
-        e.status || 405,
-      ));
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
   },
 );
+
 /**
 * Update a driver
 *
@@ -93,18 +105,24 @@ const driverIdDriverPOST = ({ idUnderscoredriver, driver }) => new Promise(
 const driverIdDriverPUT = ({ idUnderscoredriver, driver }) => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-        idUnderscoredriver,
-        driver,
-      }));
+      if (!driver) {
+        return reject(Service.rejectResponse('Driver data is required', 400));
+      }
+
+      const result = await mongoose.connection.db.collection('drivers')
+        .updateOne({ driveNumber: parseInt(idUnderscoredriver) }, { $set: driver });
+
+      if (result.matchedCount === 0) {
+        return reject(Service.rejectResponse('Driver not found', 404));
+      }
+
+      return resolve(Service.successResponse({ message: 'Driver updated successfully' }));
     } catch (e) {
-      reject(Service.rejectResponse(
-        e.message || 'Invalid input',
-        e.status || 405,
-      ));
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
   },
 );
+
 /**
 * Get all drivers (URIs)
 *
@@ -113,16 +131,17 @@ const driverIdDriverPUT = ({ idUnderscoredriver, driver }) => new Promise(
 const driversGET = () => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-      }));
+      const drivers = await mongoose.connection.db.collection('drivers')
+        .find({}, { projection: { _id: 0 } })
+        .toArray();
+
+      return resolve(Service.successResponse({ drivers }));
     } catch (e) {
-      reject(Service.rejectResponse(
-        e.message || 'Invalid input',
-        e.status || 405,
-      ));
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
   },
 );
+
 /**
 * Get all drivers in a race (with optional filters)
 *
@@ -134,19 +153,37 @@ const driversGET = () => new Promise(
 const driversIdRaceGET = ({ idUnderscorerace, driverCode, team }) => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-        idUnderscorerace,
-        driverCode,
-        team,
-      }));
+      // Obtener el nombre de la carrera desde su ID
+      const race = await mongoose.connection.db.collection('races').findOne({ raceId: parseInt(idUnderscorerace) });
+      if (!race) {
+        return reject(Service.rejectResponse('Race not found', 404));
+      }
+
+      // Obtener todos los drivers que participaron en los laps de esa carrera
+      const matchQuery = {
+        raceName: race.raceName,
+        ...(driverCode && { driverCode }),
+      };
+
+      const driverCodes = await mongoose.connection.db.collection('laps').distinct('driverCode', matchQuery);
+
+      // Obtener info de drivers desde la colección `drivers`
+      const driversQuery = {
+        code: { $in: driverCodes },
+        ...(team && { team })
+      };
+
+      const drivers = await mongoose.connection.db.collection('drivers')
+        .find(driversQuery, { projection: { _id: 0 } })
+        .toArray();
+
+      return resolve(Service.successResponse({ drivers }));
     } catch (e) {
-      reject(Service.rejectResponse(
-        e.message || 'Invalid input',
-        e.status || 405,
-      ));
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
-  },
+  }
 );
+
 /**
 * Delete a race
 *
@@ -156,17 +193,22 @@ const driversIdRaceGET = ({ idUnderscorerace, driverCode, team }) => new Promise
 const raceIdRaceDELETE = ({ idUnderscorerace }) => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-        idUnderscorerace,
+      const result = await mongoose.connection.db.collection('races')
+        .deleteOne({ raceId: parseInt(idUnderscorerace) });
+
+      if (result.deletedCount === 0) {
+        return reject(Service.rejectResponse('Race not found', 404));
+      }
+
+      return resolve(Service.successResponse({
+        message: 'Race deleted successfully',
       }));
     } catch (e) {
-      reject(Service.rejectResponse(
-        e.message || 'Invalid input',
-        e.status || 405,
-      ));
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
-  },
+  }
 );
+
 
 /**
 * Get a race by ID
@@ -177,17 +219,20 @@ const raceIdRaceDELETE = ({ idUnderscorerace }) => new Promise(
 const raceIdRaceGET = ({ idUnderscorerace }) => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-        idUnderscorerace,
-      }));
+      const race = await mongoose.connection.db.collection('races')
+        .findOne({ raceId: parseInt(idUnderscorerace) }, { projection: { _id: 0 } });
+
+      if (!race) {
+        return reject(Service.rejectResponse('Race not found', 404));
+      }
+
+      return resolve(Service.successResponse(race));
     } catch (e) {
-      reject(Service.rejectResponse(
-        e.message || 'Invalid input',
-        e.status || 405,
-      ));
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
-  },
+  }
 );
+
 /**
 * Get a lap from a race (with optional filter by driver)
 *
@@ -199,19 +244,32 @@ const raceIdRaceGET = ({ idUnderscorerace }) => new Promise(
 const raceIdRaceLapLapNumberGET = ({ idUnderscorerace, lapUnderscorenumber, driverCode }) => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-        idUnderscorerace,
-        lapUnderscorenumber,
-        driverCode,
-      }));
+      const race = await mongoose.connection.db.collection('races').findOne({ raceId: parseInt(idUnderscorerace) });
+      if (!race) {
+        return reject(Service.rejectResponse('Race not found', 404));
+      }
+
+      const query = {
+        raceName: race.raceName,
+        lapNumber: parseInt(lapUnderscorenumber),
+        ...(driverCode && { driverCode })
+      };
+
+      const laps = await mongoose.connection.db.collection('laps')
+        .find(query, { projection: { _id: 0 } })
+        .toArray();
+
+      if (laps.length === 0) {
+        return reject(Service.rejectResponse('Lap(s) not found', 404));
+      }
+
+      return resolve(Service.successResponse({ laps }));
     } catch (e) {
-      reject(Service.rejectResponse(
-        e.message || 'Invalid input',
-        e.status || 405,
-      ));
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
-  },
+  }
 );
+
 /**
 * Get all laps of a race
 *
@@ -221,17 +279,22 @@ const raceIdRaceLapLapNumberGET = ({ idUnderscorerace, lapUnderscorenumber, driv
 const raceIdRaceLapsGET = ({ idUnderscorerace }) => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-        idUnderscorerace,
-      }));
+      const race = await mongoose.connection.db.collection('races').findOne({ raceId: parseInt(idUnderscorerace) });
+      if (!race) {
+        return reject(Service.rejectResponse('Race not found', 404));
+      }
+
+      const laps = await mongoose.connection.db.collection('laps')
+        .find({ raceName: race.raceName }, { projection: { _id: 0 } })
+        .toArray();
+
+      return resolve(Service.successResponse({ laps }));
     } catch (e) {
-      reject(Service.rejectResponse(
-        e.message || 'Invalid input',
-        e.status || 405,
-      ));
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
-  },
+  }
 );
+
 /**
 * Update a race
 *
@@ -242,18 +305,22 @@ const raceIdRaceLapsGET = ({ idUnderscorerace }) => new Promise(
 const raceIdRacePUT = ({ idUnderscorerace, race }) => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-        idUnderscorerace,
-        race,
+      const result = await mongoose.connection.db.collection('races')
+        .updateOne({ raceId: parseInt(idUnderscorerace) }, { $set: race });
+
+      if (result.matchedCount === 0) {
+        return reject(Service.rejectResponse('Race not found', 404));
+      }
+
+      return resolve(Service.successResponse({
+        message: 'Race updated successfully',
       }));
     } catch (e) {
-      reject(Service.rejectResponse(
-        e.message || 'Invalid input',
-        e.status || 405,
-      ));
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
-  },
+  }
 );
+
 /**
 * Create a race
 *
@@ -263,17 +330,24 @@ const raceIdRacePUT = ({ idUnderscorerace, race }) => new Promise(
 const racePOST = ({ race }) => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-        race,
+      const lastRace = await mongoose.connection.db.collection('races')
+        .find().sort({ raceId: -1 }).limit(1).toArray();
+
+      const nextId = lastRace.length > 0 ? lastRace[0].raceId + 1 : 1;
+      race.raceId = nextId;
+
+      const result = await mongoose.connection.db.collection('races').insertOne(race);
+
+      return resolve(Service.successResponse({
+        message: 'Race created successfully',
+        insertedId: result.insertedId,
       }));
     } catch (e) {
-      reject(Service.rejectResponse(
-        e.message || 'Invalid input',
-        e.status || 405,
-      ));
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
-  },
+  }
 );
+
 /**
 * Get all races
 *
@@ -282,16 +356,17 @@ const racePOST = ({ race }) => new Promise(
 const racesGET = () => new Promise(
   async (resolve, reject) => {
     try {
-      resolve(Service.successResponse({
-      }));
+      const races = await mongoose.connection.db.collection('races')
+        .find({}, { projection: { _id: 0 } })
+        .toArray();
+
+      return resolve(Service.successResponse({ races }));
     } catch (e) {
-      reject(Service.rejectResponse(
-        e.message || 'Invalid input',
-        e.status || 405,
-      ));
+      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
   },
 );
+
 
 module.exports = {
   driverIdDriverDELETE,
