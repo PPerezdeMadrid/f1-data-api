@@ -478,8 +478,6 @@ components:
           type: string
         team:
           type: string
-        nationality:
-          type: string
       required:
       - code
       - team
@@ -487,7 +485,6 @@ components:
       example:
         driverNumber: 0
         code: code
-        nationality: nationality
         team: team
       properties:
         driverNumber:
@@ -495,8 +492,6 @@ components:
         code:
           type: string
         team:
-          type: string
-        nationality:
           type: string
       required:
       - code
@@ -609,11 +604,9 @@ components:
         drivers:
         - driverNumber: 0
           code: code
-          nationality: nationality
           team: team
         - driverNumber: 0
           code: code
-          nationality: nationality
           team: team
       properties:
         drivers:

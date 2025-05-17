@@ -176,40 +176,53 @@ const driversGET = ({ offset = 0, limit = 10 }) => new Promise(
 * driverCode String Filter by driver code (optional)
 * team String Filter by team name (optional)
 * returns _drivers__id_race__get_200_response
+* /drivers/{id_race} -> driverNumber, code, team
 * */
-const driversIdRaceGET = ({ idUnderscorerace, driverCode, team }) => new Promise(
+const driversIdRaceGET = ({ id_race, id_driver, team }) => new Promise(
   async (resolve, reject) => {
     try {
-      // Obtener el nombre de la carrera desde su ID
-      const race = await mongoose.connection.db.collection('races').findOne({ raceId: parseInt(idUnderscorerace) });
-      if (!race) {
+      const raceIdInt = parseInt(id_race);
+      if (isNaN(raceIdInt)) {
+        return reject(Service.rejectResponse('Invalid race ID', 400));
+      }
+
+      // Verificar que la carrera existe (opcional)
+      const raceExists = await mongoose.connection.db.collection('races').findOne({ id_race: raceIdInt });
+      if (!raceExists) {
         return reject(Service.rejectResponse('Race not found', 404));
       }
 
-      // Obtener todos los drivers que participaron en los laps de esa carrera
+      // Construir el filtro para laps con id_race y opcionalmente id_driver
       const matchQuery = {
-        raceName: race.raceName,
-        ...(driverCode && { driverCode }),
+        id_race: raceIdInt,
+        ...(id_driver !== undefined && { id_driver: parseInt(id_driver) }),
       };
 
-      const driverCodes = await mongoose.connection.db.collection('laps').distinct('driverCode', matchQuery);
+      // Sacar los id_driver únicos de esos laps
+      const driverIds = await mongoose.connection.db.collection('laps').distinct('id_driver', matchQuery);
 
-      // Obtener info de drivers desde la colección `drivers`
+      if (driverIds.length === 0) {
+        // No drivers found
+        return resolve(Service.successResponse({ drivers: [] }));
+      }
+
+      // Construir filtro para drivers con id_driver y opcionalmente team
       const driversQuery = {
-        code: { $in: driverCodes },
-        ...(team && { team })
+        id_driver: { $in: driverIds },
+        ...(team && { team }),
       };
 
       const drivers = await mongoose.connection.db.collection('drivers')
-        .find(driversQuery, { projection: { _id: 0 } })
+        .find(driversQuery, { projection: { _id: 0, id_driver: 0 } }) // ocultamos _id y id_driver si quieres
         .toArray();
 
       return resolve(Service.successResponse({ drivers }));
     } catch (e) {
-      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+      return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
   }
 );
+
 
 /**
 * Delete a race

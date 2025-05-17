@@ -57,38 +57,6 @@ def process_drivers(drivers_data_path, drivers_teams_path):
 
     print(f"{len(drivers)} drivers saved to {OUTPUT_DRIVERS_JSON}")
 
-# --- Función para procesar laps ---
-def process_laps(lap_file):
-    laps = []
-
-    with open(lap_file, mode='r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            lap = {
-                "lapNumber": safe_int(row.get("LapNumber")),
-                "driverCode": clean_str(row.get("Driver")),
-                "position": safe_int(row.get("Position")),
-                "lapTime": clean_str(row.get("LapTime")),
-                "isPersonalBest": clean_str(row.get("IsPersonalBest")).lower() == "true" if clean_str(row.get("IsPersonalBest")) else False,
-                "sector1Time": clean_str(row.get("Sector1Time")),
-                "sector2Time": clean_str(row.get("Sector2Time")),
-                "sector3Time": clean_str(row.get("Sector3Time")),
-                "compound": clean_str(row.get("Compound")),
-                "pitInTime": clean_str(row.get("PitInTime")),
-                "pitOutTime": clean_str(row.get("PitOutTime")),
-                "pitStopDuration": clean_str(row.get("PitStopDuration")),
-                "finishingPosition": safe_int(row.get("FinishingPosition")),
-                "gridPosition": safe_int(row.get("GridPosition")),
-                "finalStatus": clean_str(row.get("FinalStatus")),
-            }
-            if lap["lapNumber"] and lap["driverCode"]:
-                laps.append(lap)
-
-    with open(OUTPUT_LAPS_JSON, "w", encoding="utf-8") as out:
-        json.dump(laps, out, indent=2)
-
-    print(f"{len(laps)} laps saved to {OUTPUT_LAPS_JSON}")
-
 # --- Función para procesar carreras ---
 def process_races(lap_file):
     unique_races = set()
@@ -121,6 +89,64 @@ def process_races(lap_file):
 
     print(f"{len(races)} races saved to {OUTPUT_RACES_JSON}")
 
+# --- Función para procesar laps ---
+def process_laps(lap_file, races_path, drivers_path):
+    laps = []
+
+    # --- Cargar races.json ---
+    with open(races_path, mode="r", encoding="utf-8") as f:
+        races = json.load(f)
+    race_lookup = {
+        (race["season"], race["raceName"], race["raceType"]): race["id_race"]
+        for race in races
+    }
+
+    # --- Cargar drivers.json ---
+    with open(drivers_path, mode="r", encoding="utf-8") as f:
+        drivers = json.load(f)
+    driver_lookup = {
+        driver["code"]: driver["id_driver"]
+        for driver in drivers
+    }
+
+    with open(lap_file, mode='r', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            season = safe_int(row.get("Season"))
+            race_name = clean_str(row.get("RaceName"))
+            race_type = clean_str(row.get("RaceType"))
+            driver_code = clean_str(row.get("Driver"))
+
+            id_race = race_lookup.get((season, race_name, race_type))
+            id_driver = driver_lookup.get(driver_code)
+
+            lap = {
+                "lapNumber": safe_int(row.get("LapNumber")),
+                "id_driver": id_driver,
+                "position": safe_int(row.get("Position")),
+                "lapTime": clean_str(row.get("LapTime")),
+                "isPersonalBest": clean_str(row.get("IsPersonalBest")).lower() == "true" if clean_str(row.get("IsPersonalBest")) else False,
+                "sector1Time": clean_str(row.get("Sector1Time")),
+                "sector2Time": clean_str(row.get("Sector2Time")),
+                "sector3Time": clean_str(row.get("Sector3Time")),
+                "compound": clean_str(row.get("Compound")),
+                "pitInTime": clean_str(row.get("PitInTime")),
+                "pitOutTime": clean_str(row.get("PitOutTime")),
+                "pitStopDuration": clean_str(row.get("PitStopDuration")),
+                "finishingPosition": safe_int(row.get("FinishingPosition")),
+                "gridPosition": safe_int(row.get("GridPosition")),
+                "finalStatus": clean_str(row.get("FinalStatus")),
+                "id_race": id_race,
+            }
+
+            if lap["lapNumber"] and lap["id_driver"] is not None and lap["id_race"] is not None:
+                laps.append(lap)
+
+    with open(OUTPUT_LAPS_JSON, "w", encoding="utf-8") as out:
+        json.dump(laps, out, indent=2)
+
+    print(f"{len(laps)} laps saved to {OUTPUT_LAPS_JSON}")
+
 # --- Función principal ---
 def main():
     DRIVERS_DATA_PATH = Path("../../SPA_DATA/drivers_data")
@@ -128,8 +154,8 @@ def main():
     LAPS_FILE = Path("../../SPA_DATA/SPA_2018_2025_full_H_data.csv")
 
     process_drivers(DRIVERS_DATA_PATH, DRIVERS_TEAMS_PATH)
-    process_laps(LAPS_FILE)
     process_races(LAPS_FILE)
+    process_laps(LAPS_FILE, OUTPUT_RACES_JSON, OUTPUT_DRIVERS_JSON)
 
 if __name__ == "__main__":
     main()
