@@ -11,5 +11,8 @@
   "description": "",
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.20.0"
+  },
+  "dependencies": {
+    "js2xmlparser": "^5.0.0"
   }
 }

@@ -36,6 +36,8 @@ const driverIdDriverDELETE = ({ id_driver }) => new Promise(
 *
 * idUnderscoredriver Integer 
 * returns Driver
+
+TIENE QUE DEVOLVER LA RESPUESTA EN XML
 * */
 const driverIdDriverGET = ({ id_driver }) => new Promise(
   async (resolve, reject) => {
@@ -49,7 +51,8 @@ const driverIdDriverGET = ({ id_driver }) => new Promise(
           404
         ));
       }
-      return resolve(Service.successResponse(driver));
+      //return resolve(Service.successResponse(driver));
+      return resolve(Service.successResponseXML(driver, "driver"));
     } catch (e) {
       reject(Service.rejectResponse(
         e.message || 'Invalid input',

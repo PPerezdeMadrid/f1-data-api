@@ -7,6 +7,8 @@ servers:
 paths:
   /races:
     get:
+      tags:
+        - Races
       operationId: racesGET
       responses:
         "200":
@@ -19,6 +21,8 @@ paths:
       x-eov-operation-handler: controllers/DefaultController
   /race:
     post:
+      tags:
+        - Races
       operationId: racePOST
       requestBody:
         content:
@@ -42,6 +46,8 @@ paths:
       x-eov-operation-handler: controllers/DefaultController
   /race/{id_race}:
     delete:
+      tags:
+        - Races
       operationId: raceIdRaceDELETE
       parameters:
       - explode: false
@@ -67,6 +73,8 @@ paths:
       summary: Delete a race
       x-eov-operation-handler: controllers/DefaultController
     get:
+      tags:
+        - Races
       operationId: raceIdRaceGET
       parameters:
       - explode: false
@@ -92,6 +100,8 @@ paths:
       summary: Get a race by ID
       x-eov-operation-handler: controllers/DefaultController
     put:
+      tags:
+        - Races
       operationId: raceIdRacePUT
       parameters:
       - explode: false
@@ -129,6 +139,8 @@ paths:
       x-eov-operation-handler: controllers/DefaultController
   /drivers:
     get:
+      tags:
+        - Drivers
       operationId: driversGET
       responses:
         "200":
@@ -141,6 +153,8 @@ paths:
       x-eov-operation-handler: controllers/DefaultController
   /drivers/{id_race}:
     get:
+      tags:
+        - Drivers
       operationId: driversIdRaceGET
       parameters:
       - explode: false
@@ -183,6 +197,8 @@ paths:
       x-eov-operation-handler: controllers/DefaultController
   /driver/{id_driver}:
     delete:
+      tags:
+        - Drivers
       operationId: driverIdDriverDELETE
       parameters:
       - explode: false
@@ -208,6 +224,8 @@ paths:
       summary: Delete a driver
       x-eov-operation-handler: controllers/DefaultController
     get:
+      tags:
+        - Drivers
       operationId: driverIdDriverGET
       parameters:
       - explode: false
@@ -220,9 +238,9 @@ paths:
       responses:
         "200":
           content:
-            application/json:
+            application/xml:
               schema:
-                $ref: '#/components/schemas/Driver'
+                $ref: '#/components/schemas/DriverXML'
           description: Driver found
         "404":
           content:
@@ -233,6 +251,8 @@ paths:
       summary: Get driver by ID
       x-eov-operation-handler: controllers/DefaultController
     post:
+      tags:
+        - Drivers
       operationId: driverIdDriverPOST
       parameters:
       - explode: false
@@ -269,6 +289,8 @@ paths:
       summary: Add a driver
       x-eov-operation-handler: controllers/DefaultController
     put:
+      tags:
+        - Drivers
       operationId: driverIdDriverPUT
       parameters:
       - explode: false
@@ -306,6 +328,8 @@ paths:
       x-eov-operation-handler: controllers/DefaultController
   /race/{id_race}/laps:
     get:
+      tags:
+        - Laps
       operationId: raceIdRaceLapsGET
       parameters:
       - explode: false
@@ -332,6 +356,8 @@ paths:
       x-eov-operation-handler: controllers/DefaultController
   /race/{id_race}/lap/{lap_number}:
     get:
+      tags:
+        - Laps
       operationId: raceIdRaceLapLapNumberGET
       parameters:
       - explode: false
@@ -426,6 +452,22 @@ components:
       - raceType
       - season
       type: object
+    DriverXML:
+      type: object
+      xml:
+        name: driver
+      properties:
+        driverNumber:
+          type: integer
+        code:
+          type: string
+        team:
+          type: string
+        nationality:
+          type: string
+      required:
+      - code
+      - team
     Driver:
       example:
         driverNumber: 0
@@ -628,3 +670,10 @@ components:
         times:
           $ref: '#/components/schemas/Lap'
       type: object
+tags:
+  - name: Races
+    description: Operations related to race events (create, read, update, delete)
+  - name: Drivers
+    description: Operations related to drivers (add, fetch, update, delete)
+  - name: Laps
+    description: Operations related to lap times in races
