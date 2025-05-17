@@ -39,17 +39,21 @@ This project is licensed under the MIT License.
 
 
 
-## Usage Instructions
 
-### Step 1: Convert CSV files to JSON
+## 📦 Usage Instructions
 
-Run the Python script to generate JSON files:
+### 1. Transform the data
+
+Navigate to the `src/DataScripts` directory and run the transformation script:
 
 ```bash
-python DataJSON.py
+cd src/DataScripts
+python transformData.py
 ```
 
-### Step 2: Import JSON files into MongoDB
+This step converts the raw data into the appropriate JSON format for MongoDB import.
+
+### 2. Import JSON files into MongoDB
 
 Make the import script executable and run it:
 
@@ -57,3 +61,4 @@ Make the import script executable and run it:
 chmod +x importData.sh
 ./importData.sh
 ```
+
