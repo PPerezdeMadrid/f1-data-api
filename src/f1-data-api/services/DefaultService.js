@@ -408,6 +408,74 @@ const racesGET = () => new Promise(
   },
 );
 
+const importExternalRaces = ({ season }) => new Promise(
+  async (resolve, reject) => {
+    console.log(`[importExternalRaces] Called with season:`, season);
+
+    try {
+      const seasonInt = parseInt(season);
+      console.log(`[importExternalRaces] Parsed seasonInt:`, seasonInt);
+
+      if (isNaN(seasonInt) || seasonInt < 2018 || seasonInt > 2024) {
+        console.warn(`[importExternalRaces] Invalid season:`, seasonInt);
+        return reject(Service.rejectResponse('Season must be an integer between 2018 and 2024', 400));
+      }
+
+      console.log(`[importExternalRaces] Making request to Hyprace API...`);
+
+      const response = await axios.get('https://hyprace-api.p.rapidapi.com/v1/grands-prix', {
+        params: { seasonYear: seasonInt },
+        headers: {
+          'X-RapidAPI-Key': process.env.RAPID_API_KEY,
+          'X-RapidAPI-Host': 'hyprace-api.p.rapidapi.com'
+        }
+      });
+
+      console.log(`[importExternalRaces] Response status:`, response.status);
+      console.log(`[importExternalRaces] Response items:`, Array.isArray(response.data.items) ? response.data.items.length : 'Invalid format');
+
+      const items = response.data.items;
+      if (!Array.isArray(items)) {
+        return reject(Service.rejectResponse('Unexpected format from external API', 502));
+      }
+
+      let count = 0;
+      for (const item of items) {
+        const simplifiedRace = {
+          season: item.season?.year,
+          raceName: item.name,
+          raceType: "Main Race"
+        };
+
+        if (!simplifiedRace.season || !simplifiedRace.raceName) {
+          console.warn("Invalid race object skipped:", simplifiedRace);
+          continue;
+        }
+
+        try {
+          await racePOST({ race: simplifiedRace });
+          count++;
+        } catch (err) {
+          console.warn(`Error saving race ${simplifiedRace.raceName}:`, err.message);
+        }
+      }
+
+      console.log(`[importExternalRaces] Total races imported:`, count);
+
+      return resolve(Service.successResponse({
+        message: 'Races imported successfully',
+        imported: count
+      }));
+
+    } catch (error) {
+      console.error('[importExternalRaces] ERROR:', error.message);
+      return reject(Service.rejectResponse('Failed to fetch data from external API', 502));
+    }
+  }
+);
+
+
+
 
 module.exports = {
   driverIdDriverDELETE,
@@ -423,4 +491,5 @@ module.exports = {
   raceIdRacePUT,
   racePOST,
   racesGET,
+  importExternalRaces,
 };

@@ -412,6 +412,53 @@ paths:
           description: Not Found
       summary: Get a lap from a race (with optional filter by driver)
       x-eov-operation-handler: controllers/DefaultController
+  /external-races/{season}:
+    get:
+      summary: Import races from external API for a given season
+      operationId: importExternalRaces
+      tags:
+        - External
+      parameters:
+        - name: season
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 'Season year to fetch 2018:2024'
+      responses:
+        '200':
+           description: Races successfully imported
+           content:
+             application/json:
+               schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  imported:
+                    type: integer
+                  sample: 
+                    type: object
+                    properties:
+                      season:
+                        type: integer
+                      raceName:
+                        type: string
+                      raceType:
+                        type: string
+                    example:
+                        season: 2023
+                        raceName: "Grand Prix de Monaco"
+                        raceType: "Main Race"
+               example:
+                 message: "Races imported successfully"
+                 imported: 1
+                 sample:
+                   season: 2023
+                   raceName: "Grand Prix de Monaco"
+                   raceType: "Main Race"
+        '502': 
+          description: Failed to fetch data from external API
 components:
   parameters:
     RaceId:

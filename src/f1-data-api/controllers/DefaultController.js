@@ -60,6 +60,10 @@ const racesGET = async (request, response) => {
   await Controller.handleRequest(request, response, service.racesGET);
 };
 
+const importExternalRaces = async (request, response) => {
+  await Controller.handleRequest(request, response, service.importExternalRaces);
+};
+
 
 module.exports = {
   driverIdDriverDELETE,
@@ -75,4 +79,5 @@ module.exports = {
   raceIdRacePUT,
   racePOST,
   racesGET,
+  importExternalRaces,
 };
