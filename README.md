@@ -62,11 +62,3 @@ chmod +x importData.sh
 ./importData.sh
 ```
 
-
-
-##### Orianna instaló esto:
-npm install dotenv --save
-npm install xml2js
-npm install axios
-
-
