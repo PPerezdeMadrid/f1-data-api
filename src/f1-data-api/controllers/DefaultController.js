@@ -64,6 +64,10 @@ const importExternalRaces = async (request, response) => {
   await Controller.handleRequest(request, response, service.importExternalRaces);
 };
 
+const importExternalXML = async (request, response) => {
+  await Controller.handleRequest(request, response, service.importExternalXML);
+};
+
 
 module.exports = {
   driverIdDriverDELETE,
@@ -80,4 +84,5 @@ module.exports = {
   racePOST,
   racesGET,
   importExternalRaces,
+  importExternalXML
 };

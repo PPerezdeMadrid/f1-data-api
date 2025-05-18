@@ -459,6 +459,28 @@ paths:
                    raceType: "Main Race"
         '502': 
           description: Failed to fetch data from external API
+  /external-xml:
+    get:
+      summary: Consume external XML API and returns the parsed result
+      operationId: importExternalXML
+      tags:
+      - External
+      responses:
+        '200':
+          description: Parsed XML content from external source
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  note:
+                    to: "Users"
+                    from: "Orianna"
+                    heading: "Reminder"
+                    body: "This counts as XML!"
+        '502':
+          description: Failed to fetch or parse XML from external API
+
 components:
   parameters:
     RaceId:

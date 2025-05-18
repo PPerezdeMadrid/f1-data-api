@@ -1,6 +1,8 @@
 /* eslint-disable no-unused-vars */
 const Service = require('./Service');
 const mongoose = require('mongoose');
+const axios = require('axios');
+const xml2js = require('xml2js');
 
 // TODO POR DEFECTO, HAY QUE MODIFICARLO
 
@@ -474,7 +476,29 @@ const importExternalRaces = ({ season }) => new Promise(
   }
 );
 
+const importExternalXML = () => new Promise(
+  async (resolve, reject) => {
+    try {
+      console.log("[importExternalXML] Requesting XML from external API...");
 
+      const { data: xml } = await axios.get('https://www.w3schools.com/xml/note.xml', {
+        headers: { Accept: 'application/xml' }
+      });
+
+      console.log("[importExternalXML] Received XML:\n", xml);
+
+      const parser = new xml2js.Parser({ explicitArray: false });
+      const result = await parser.parseStringPromise(xml);
+
+      console.log("[importExternalXML] Parsed XML to JSON:", result);
+
+      return resolve(Service.successResponse(result));
+    } catch (error) {
+      console.error("[importExternalXML] Error fetching or parsing XML:", error.message);
+      return reject(Service.rejectResponse('Failed to fetch or parse XML from external API', 502));
+    }
+  }
+);
 
 
 module.exports = {
@@ -492,4 +516,5 @@ module.exports = {
   racePOST,
   racesGET,
   importExternalRaces,
+  importExternalXML
 };
