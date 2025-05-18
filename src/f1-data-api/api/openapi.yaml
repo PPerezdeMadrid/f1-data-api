@@ -416,6 +416,7 @@ paths:
     get:
       summary: Import races from external API for a given season
       operationId: importExternalRaces
+      x-eov-operation-handler: controllers/DefaultController
       tags:
         - External
       parameters:
@@ -463,6 +464,7 @@ paths:
     get:
       summary: Consume external XML API and returns the parsed result
       operationId: importExternalXML
+      x-eov-operation-handler: controllers/DefaultController
       tags:
       - External
       responses:
