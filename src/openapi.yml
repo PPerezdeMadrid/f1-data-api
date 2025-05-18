@@ -249,6 +249,35 @@ paths:
                     $ref: '#/components/schemas/Lap'
         '404':
           $ref: '#/components/responses/NotFound'
+  
+  /external-races/{season}:
+  get:
+    summary: Import races from external API for a given season
+    operationId: importExternalRaces
+    tags:
+      - external
+    parameters:
+      - name: season
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: 'Season year to fetch 2018:2024'
+    responses:
+      '200':
+        description: Races successfully imported
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                imported:
+                  type: integer
+      '502':
+        description: Failed to fetch data from external API
+
 
 components:
   parameters:
