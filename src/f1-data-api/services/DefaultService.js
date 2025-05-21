@@ -346,24 +346,42 @@ const raceIdRaceLapsGET = ({ idUnderscorerace }) => new Promise(
 * race Race  (optional)
 * returns Message
 * */
-const raceIdRacePUT = ({ idUnderscorerace, race }) => new Promise(
-  async (resolve, reject) => {
-    try {
-      const result = await mongoose.connection.db.collection('races')
-        .updateOne({ raceId: parseInt(idUnderscorerace) }, { $set: race });
+const raceIdRacePUT = (params) => new Promise(async (resolve, reject) => {
+  try {
+    const { id_race, ...raceUpdateData } = params;
 
-      if (result.matchedCount === 0) {
-        return reject(Service.rejectResponse('Race not found', 404));
-      }
-
-      return resolve(Service.successResponse({
-        message: 'Race updated successfully',
-      }));
-    } catch (e) {
-      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+    if (!raceUpdateData || Object.keys(raceUpdateData).length === 0) {
+      return reject(Service.rejectResponse('Race data is required', 400));
     }
+
+    const raceIdNum = parseInt(id_race);
+    if (isNaN(raceIdNum)) {
+      return reject(Service.rejectResponse('Invalid race ID', 400));
+    }
+
+    // Filtrar valores null o undefined para evitar errores en $set
+    const updateData = Object.fromEntries(
+      Object.entries(raceUpdateData).filter(([_, v]) => v !== null && v !== undefined)
+    );
+
+    if (Object.keys(updateData).length === 0) {
+      return reject(Service.rejectResponse('No valid fields to update', 400));
+    }
+
+    const result = await mongoose.connection.db.collection('races')
+      .updateOne({ id_race: raceIdNum }, { $set: updateData });
+
+    if (result.matchedCount === 0) {
+      return reject(Service.rejectResponse('Race not found', 404));
+    }
+
+    return resolve(Service.successResponse({ message: 'Race updated successfully' }));
+  } catch (e) {
+    return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
   }
-);
+});
+
+
 
 /**
 * Create a race
