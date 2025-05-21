@@ -365,24 +365,31 @@ const raceIdRaceLapLapNumberGET = ({ idUnderscorerace, lapUnderscorenumber, driv
 * idUnderscorerace Integer 
 * returns _race__id_race__laps_get_200_response
 * */
-const raceIdRaceLapsGET = ({ idUnderscorerace }) => new Promise(
+const raceIdRaceLapsGET = ({ id_race }) => new Promise(
   async (resolve, reject) => {
     try {
-      const race = await mongoose.connection.db.collection('races').findOne({ raceId: parseInt(idUnderscorerace) });
+      const raceIdInt = parseInt(id_race);
+      if (isNaN(raceIdInt)) {
+        return reject(Service.rejectResponse('Invalid race ID', 400));
+      }
+
+      const race = await mongoose.connection.db.collection('races').findOne({ id_race: raceIdInt });
       if (!race) {
         return reject(Service.rejectResponse('Race not found', 404));
       }
 
       const laps = await mongoose.connection.db.collection('laps')
-        .find({ raceName: race.raceName }, { projection: { _id: 0 } })
+        .find({ id_race: raceIdInt }, { projection: { _id: 0 } })
         .toArray();
 
       return resolve(Service.successResponse({ laps }));
     } catch (e) {
-      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+      return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
   }
 );
+
+
 
 /**
 * Update a race
