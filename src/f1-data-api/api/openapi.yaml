@@ -447,6 +447,8 @@ paths:
                         type: string
                       raceType:
                         type: string
+                      id_race:
+                        type: integer
                     example:
                         season: 2023
                         raceName: "Grand Prix de Monaco"

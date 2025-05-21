@@ -195,3 +195,27 @@ When a resource is not found or a request is invalid, the API will respond with:
   "error": "Not Found"
 }
 ```
+
+
+---
+Ve a la pestaña Body > raw, selecciona JSON, y pega un ejemplo válido del objeto Race, por ejemplo:
+
+```json
+{
+  "raceType": "Grand Prix",
+  "season": 2025,
+  "raceName": "Monaco Grand Prix"
+}
+```
+> ⚠️ Asegúrate de que coincida con el esquema definido en components/schemas/Race.
+
+o en consola:
+```bash
+curl -X POST http://localhost:8080/race \
+  -H "Content-Type: application/json" \
+  -d '{
+    "raceType": "Grand Prix",
+    "season": 2025,
+    "raceName": "Monaco Grand Prix"
+  }'
+````

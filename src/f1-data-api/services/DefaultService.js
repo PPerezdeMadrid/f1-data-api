@@ -370,14 +370,17 @@ const raceIdRacePUT = ({ idUnderscorerace, race }) => new Promise(
 * race Race  (optional)
 * returns CreatedResponse
 * */
-const racePOST = ({ race }) => new Promise(
+const racePOST = (race) => new Promise(
   async (resolve, reject) => {
     try {
-      const lastRace = await mongoose.connection.db.collection('races')
-        .find().sort({ raceId: -1 }).limit(1).toArray();
+      if (!race) throw new Error('race object is required!');
 
-      const nextId = lastRace.length > 0 ? lastRace[0].raceId + 1 : 1;
-      race.raceId = nextId;
+      const lastRace = await mongoose.connection.db.collection('races')
+        .find().sort({ race_id: -1 }).limit(1).toArray();
+
+      const nextId = lastRace.length > 0 ? lastRace[0].race_id + 1 : 1;
+
+      race.race_id = nextId;
 
       const result = await mongoose.connection.db.collection('races').insertOne(race);
 
@@ -390,6 +393,7 @@ const racePOST = ({ race }) => new Promise(
     }
   }
 );
+
 
 /**
 * Get all races
@@ -508,7 +512,7 @@ module.exports = {
   driverIdDriverPUT,
   driversGET,
   driversIdRaceGET,
-  raceIdRaceDELETE,
+  raceIdRaceGET,
   raceIdRaceGET,
   raceIdRaceLapLapNumberGET,
   raceIdRaceLapsGET,
