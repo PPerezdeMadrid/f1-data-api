@@ -232,24 +232,25 @@ const driversIdRaceGET = ({ id_race, id_driver, team }) => new Promise(
 * idUnderscorerace Integer 
 * returns Message
 * */
-const raceIdRaceDELETE = ({ idUnderscorerace }) => new Promise(
-  async (resolve, reject) => {
-    try {
-      const result = await mongoose.connection.db.collection('races')
-        .deleteOne({ raceId: parseInt(idUnderscorerace) });
-
-      if (result.deletedCount === 0) {
-        return reject(Service.rejectResponse('Race not found', 404));
-      }
-
-      return resolve(Service.successResponse({
-        message: 'Race deleted successfully',
-      }));
-    } catch (e) {
-      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+const raceIdRaceDELETE = ({ id_race }) => new Promise(async (resolve, reject) => {
+  try {
+    if (!id_race) {
+      return reject(Service.rejectResponse('Missing id_race parameter', 400));
     }
+
+    const result = await mongoose.connection.db.collection('races')
+      .deleteOne({ id_race: parseInt(id_race) });
+
+    if (result.deletedCount === 0) {
+      return reject(Service.rejectResponse('Race not found', 404));
+    }
+
+    return resolve(Service.successResponse({ message: 'Race deleted successfully' }));
+  } catch (e) {
+    return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
   }
-);
+});
+
 
 
 /**
@@ -512,6 +513,7 @@ module.exports = {
   driverIdDriverPUT,
   driversGET,
   driversIdRaceGET,
+  raceIdRaceDELETE,
   raceIdRaceGET,
   raceIdRaceGET,
   raceIdRaceLapLapNumberGET,
