@@ -70,32 +70,37 @@ const driverIdDriverGET = ({ id_driver }) => new Promise(
 * driver Driver  (optional)
 * returns CreatedResponse
 * */
-const driverIdDriverPOST = ({ idUnderscoredriver, driver }) => new Promise(
-  async (resolve, reject) => {
-    try {
-      // Aquí asumimos que idUnderscoredriver es el número de piloto y debe coincidir con driver.driveNumber
-      if (!driver) {
-        return reject(Service.rejectResponse('Driver data is required', 400));
-      }
+const driverIdDriverPOST = (params) => new Promise(async (resolve, reject) => {
+  try {
+    const { id_driver, ...driverData } = params;
 
-      driver.driveNumber = parseInt(idUnderscoredriver);
-
-      const existing = await mongoose.connection.db.collection('drivers').findOne({ driveNumber: driver.driveNumber });
-      if (existing) {
-        return reject(Service.rejectResponse('Driver with this number already exists', 409));
-      }
-
-      const result = await mongoose.connection.db.collection('drivers').insertOne(driver);
-
-      return resolve(Service.successResponse({
-        message: 'Driver created successfully',
-        insertedId: result.insertedId,
-      }));
-    } catch (e) {
-      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+    if (!driverData || Object.keys(driverData).length === 0) {
+      return reject(Service.rejectResponse('Driver data is required', 400));
     }
-  },
-);
+
+    const driverNumberInt = parseInt(id_driver);
+
+    driverData.driverNumber = driverNumberInt;
+
+    const existing = await mongoose.connection.db.collection('drivers')
+      .findOne({ driverNumber: driverNumberInt });
+
+    if (existing) {
+      return reject(Service.rejectResponse('Driver with this number already exists', 409));
+    }
+
+    const result = await mongoose.connection.db.collection('drivers').insertOne(driverData);
+
+    return resolve(Service.successResponse({
+      message: 'Driver created successfully',
+      insertedId: result.insertedId,
+    }));
+  } catch (e) {
+    return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+  }
+});
+
+
 
 /**
 * Update a driver
