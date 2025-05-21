@@ -218,4 +218,11 @@ curl -X POST http://localhost:8080/race \
     "season": 2025,
     "raceName": "Monaco Grand Prix"
   }'
+```
+
+
+
+Ejemplo Delete:
 ````
+curl -X GET "http://localhost:8080/race/5" -H "accept: application/json"
+```
