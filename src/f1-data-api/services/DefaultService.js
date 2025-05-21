@@ -70,32 +70,37 @@ const driverIdDriverGET = ({ id_driver }) => new Promise(
 * driver Driver  (optional)
 * returns CreatedResponse
 * */
-const driverIdDriverPOST = ({ idUnderscoredriver, driver }) => new Promise(
-  async (resolve, reject) => {
-    try {
-      // Aquí asumimos que idUnderscoredriver es el número de piloto y debe coincidir con driver.driveNumber
-      if (!driver) {
-        return reject(Service.rejectResponse('Driver data is required', 400));
-      }
+const driverIdDriverPOST = (params) => new Promise(async (resolve, reject) => {
+  try {
+    const { id_driver, ...driverData } = params;
 
-      driver.driveNumber = parseInt(idUnderscoredriver);
-
-      const existing = await mongoose.connection.db.collection('drivers').findOne({ driveNumber: driver.driveNumber });
-      if (existing) {
-        return reject(Service.rejectResponse('Driver with this number already exists', 409));
-      }
-
-      const result = await mongoose.connection.db.collection('drivers').insertOne(driver);
-
-      return resolve(Service.successResponse({
-        message: 'Driver created successfully',
-        insertedId: result.insertedId,
-      }));
-    } catch (e) {
-      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+    if (!driverData || Object.keys(driverData).length === 0) {
+      return reject(Service.rejectResponse('Driver data is required', 400));
     }
-  },
-);
+
+    const driverNumberInt = parseInt(id_driver);
+
+    driverData.driverNumber = driverNumberInt;
+
+    const existing = await mongoose.connection.db.collection('drivers')
+      .findOne({ driverNumber: driverNumberInt });
+
+    if (existing) {
+      return reject(Service.rejectResponse('Driver with this number already exists', 409));
+    }
+
+    const result = await mongoose.connection.db.collection('drivers').insertOne(driverData);
+
+    return resolve(Service.successResponse({
+      message: 'Driver created successfully',
+      insertedId: result.insertedId,
+    }));
+  } catch (e) {
+    return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+  }
+});
+
+
 
 /**
 * Update a driver
@@ -104,26 +109,30 @@ const driverIdDriverPOST = ({ idUnderscoredriver, driver }) => new Promise(
 * driver Driver  (optional)
 * returns Message
 * */
-const driverIdDriverPUT = ({ idUnderscoredriver, driver }) => new Promise(
-  async (resolve, reject) => {
-    try {
-      if (!driver) {
-        return reject(Service.rejectResponse('Driver data is required', 400));
-      }
+const driverIdDriverPUT = (params) => new Promise(async (resolve, reject) => {
+  try {
+    const { id_driver, ...driverData } = params;
 
-      const result = await mongoose.connection.db.collection('drivers')
-        .updateOne({ driveNumber: parseInt(idUnderscoredriver) }, { $set: driver });
-
-      if (result.matchedCount === 0) {
-        return reject(Service.rejectResponse('Driver not found', 404));
-      }
-
-      return resolve(Service.successResponse({ message: 'Driver updated successfully' }));
-    } catch (e) {
-      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+    if (!driverData || Object.keys(driverData).length === 0) {
+      return reject(Service.rejectResponse('Driver data is required', 400));
     }
-  },
-);
+
+    const result = await mongoose.connection.db.collection('drivers')
+      .updateOne(
+        { driverNumber: parseInt(id_driver) },
+        { $set: driverData }
+      );
+
+    if (result.matchedCount === 0) {
+      return reject(Service.rejectResponse('Driver not found', 404));
+    }
+
+    return resolve(Service.successResponse({ message: 'Driver updated successfully' }));
+  } catch (e) {
+    return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+  }
+});
+
 
 /**
 * Get all drivers (URIs)
@@ -180,6 +189,42 @@ const driversGET = ({ offset = 0, limit = 10 }) => new Promise(
 * returns _drivers__id_race__get_200_response
 * /drivers/{id_race} -> driverNumber, code, team
 * */
+const driversIdRaceGET = ({ id_race, driverCode, team }) => new Promise(async (resolve, reject) => {
+  try {
+    const raceIdInt = parseInt(id_race);
+    if (isNaN(raceIdInt)) {
+      return reject(Service.rejectResponse('Invalid race ID', 400));
+    }
+
+    const raceExists = await mongoose.connection.db.collection('races').findOne({ id_race: raceIdInt });
+    if (!raceExists) {
+      return reject(Service.rejectResponse('Race not found', 404));
+    }
+
+    const matchQuery = { id_race: raceIdInt };
+    const driverIds = await mongoose.connection.db.collection('laps').distinct('id_driver', matchQuery);
+
+    if (driverIds.length === 0) {
+      return resolve(Service.successResponse({ drivers: [] }));
+    }
+
+    const driversQuery = {
+      id_driver: { $in: driverIds },
+      ...(team && { team }),
+      ...(driverCode && { code: driverCode })  // Aquí se añade el filtro por code
+    };
+
+    const drivers = await mongoose.connection.db.collection('drivers')
+      .find(driversQuery, { projection: { _id: 0, id_driver: 0 } })
+      .toArray();
+
+    return resolve(Service.successResponse({ drivers }));
+  } catch (e) {
+    return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+  }
+});
+
+/*
 const driversIdRaceGET = ({ id_race, id_driver, team }) => new Promise(
   async (resolve, reject) => {
     try {
@@ -223,7 +268,7 @@ const driversIdRaceGET = ({ id_race, id_driver, team }) => new Promise(
       return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
   }
-);
+);*/
 
 
 /**
@@ -232,11 +277,18 @@ const driversIdRaceGET = ({ id_race, id_driver, team }) => new Promise(
 * idUnderscorerace Integer 
 * returns Message
 * */
+
 const raceIdRaceDELETE = ({ id_race }) => new Promise(
   async (resolve, reject) => {
     try {
+      // Aseguramos que id_race sea un entero
+      const raceIdInt = parseInt(id_race);
+      if (isNaN(raceIdInt)) {
+        throw new Error('Invalid race id');
+      }
+
       const result = await mongoose.connection.db.collection('races')
-        .deleteOne({ id_race: parseInt(id_race) }); // o raceId
+        .deleteOne({ race_id: raceIdInt }); // aquí usas race_id, no id_race
 
       if (result.deletedCount === 0) {
         return reject(Service.rejectResponse('Race not found', 404));
@@ -245,11 +297,14 @@ const raceIdRaceDELETE = ({ id_race }) => new Promise(
       return resolve(Service.successResponse({
         message: 'Race deleted successfully',
       }));
+
     } catch (e) {
-      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+      return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
   }
 );
+
+
 
 
 
@@ -320,24 +375,31 @@ const raceIdRaceLapLapNumberGET = ({ idUnderscorerace, lapUnderscorenumber, driv
 * idUnderscorerace Integer 
 * returns _race__id_race__laps_get_200_response
 * */
-const raceIdRaceLapsGET = ({ idUnderscorerace }) => new Promise(
+const raceIdRaceLapsGET = ({ id_race }) => new Promise(
   async (resolve, reject) => {
     try {
-      const race = await mongoose.connection.db.collection('races').findOne({ raceId: parseInt(idUnderscorerace) });
+      const raceIdInt = parseInt(id_race);
+      if (isNaN(raceIdInt)) {
+        return reject(Service.rejectResponse('Invalid race ID', 400));
+      }
+
+      const race = await mongoose.connection.db.collection('races').findOne({ id_race: raceIdInt });
       if (!race) {
         return reject(Service.rejectResponse('Race not found', 404));
       }
 
       const laps = await mongoose.connection.db.collection('laps')
-        .find({ raceName: race.raceName }, { projection: { _id: 0 } })
+        .find({ id_race: raceIdInt }, { projection: { _id: 0 } })
         .toArray();
 
       return resolve(Service.successResponse({ laps }));
     } catch (e) {
-      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+      return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
   }
 );
+
+
 
 /**
 * Update a race
@@ -346,24 +408,42 @@ const raceIdRaceLapsGET = ({ idUnderscorerace }) => new Promise(
 * race Race  (optional)
 * returns Message
 * */
-const raceIdRacePUT = ({ idUnderscorerace, race }) => new Promise(
-  async (resolve, reject) => {
-    try {
-      const result = await mongoose.connection.db.collection('races')
-        .updateOne({ raceId: parseInt(idUnderscorerace) }, { $set: race });
+const raceIdRacePUT = (params) => new Promise(async (resolve, reject) => {
+  try {
+    const { id_race, ...raceUpdateData } = params;
 
-      if (result.matchedCount === 0) {
-        return reject(Service.rejectResponse('Race not found', 404));
-      }
-
-      return resolve(Service.successResponse({
-        message: 'Race updated successfully',
-      }));
-    } catch (e) {
-      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+    if (!raceUpdateData || Object.keys(raceUpdateData).length === 0) {
+      return reject(Service.rejectResponse('Race data is required', 400));
     }
+
+    const raceIdNum = parseInt(id_race);
+    if (isNaN(raceIdNum)) {
+      return reject(Service.rejectResponse('Invalid race ID', 400));
+    }
+
+    // Filtrar valores null o undefined para evitar errores en $set
+    const updateData = Object.fromEntries(
+      Object.entries(raceUpdateData).filter(([_, v]) => v !== null && v !== undefined)
+    );
+
+    if (Object.keys(updateData).length === 0) {
+      return reject(Service.rejectResponse('No valid fields to update', 400));
+    }
+
+    const result = await mongoose.connection.db.collection('races')
+      .updateOne({ id_race: raceIdNum }, { $set: updateData });
+
+    if (result.matchedCount === 0) {
+      return reject(Service.rejectResponse('Race not found', 404));
+    }
+
+    return resolve(Service.successResponse({ message: 'Race updated successfully' }));
+  } catch (e) {
+    return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
   }
-);
+});
+
+
 
 /**
 * Create a race
@@ -520,6 +600,7 @@ module.exports = {
   driverIdDriverPUT,
   driversGET,
   driversIdRaceGET,
+  raceIdRaceDELETE,
   raceIdRaceGET,
   raceIdRaceGET,
   raceIdRaceLapLapNumberGET,
