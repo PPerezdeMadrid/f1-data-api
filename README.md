@@ -15,11 +15,20 @@ cd f1-data-api
 npm install
 ```
 
+## 🚀 Start
+
+To start the server, simply run:
+
+```bash
+npm start
+```
+
 ## 🏁 Usage
 Check out the full documentation on the [Wiki](#) or test the endpoints with:
 ```bash
 curl -X GET "https://api.f1data.com/races/2024" -H "Authorization: Bearer YOUR_API_KEY"
 ```
+You can also use an external tool like 'Postman'.
 
 ## Design
 You can find the API design at this link [Design Doc](Design/openapi-f1data.yaml).
