@@ -180,6 +180,42 @@ const driversGET = ({ offset = 0, limit = 10 }) => new Promise(
 * returns _drivers__id_race__get_200_response
 * /drivers/{id_race} -> driverNumber, code, team
 * */
+const driversIdRaceGET = ({ id_race, driverCode, team }) => new Promise(async (resolve, reject) => {
+  try {
+    const raceIdInt = parseInt(id_race);
+    if (isNaN(raceIdInt)) {
+      return reject(Service.rejectResponse('Invalid race ID', 400));
+    }
+
+    const raceExists = await mongoose.connection.db.collection('races').findOne({ id_race: raceIdInt });
+    if (!raceExists) {
+      return reject(Service.rejectResponse('Race not found', 404));
+    }
+
+    const matchQuery = { id_race: raceIdInt };
+    const driverIds = await mongoose.connection.db.collection('laps').distinct('id_driver', matchQuery);
+
+    if (driverIds.length === 0) {
+      return resolve(Service.successResponse({ drivers: [] }));
+    }
+
+    const driversQuery = {
+      id_driver: { $in: driverIds },
+      ...(team && { team }),
+      ...(driverCode && { code: driverCode })  // Aquí se añade el filtro por code
+    };
+
+    const drivers = await mongoose.connection.db.collection('drivers')
+      .find(driversQuery, { projection: { _id: 0, id_driver: 0 } })
+      .toArray();
+
+    return resolve(Service.successResponse({ drivers }));
+  } catch (e) {
+    return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+  }
+});
+
+/*
 const driversIdRaceGET = ({ id_race, id_driver, team }) => new Promise(
   async (resolve, reject) => {
     try {
@@ -223,7 +259,7 @@ const driversIdRaceGET = ({ id_race, id_driver, team }) => new Promise(
       return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
   }
-);
+);*/
 
 
 /**
