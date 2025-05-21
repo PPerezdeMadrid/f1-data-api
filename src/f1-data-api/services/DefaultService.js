@@ -109,26 +109,30 @@ const driverIdDriverPOST = (params) => new Promise(async (resolve, reject) => {
 * driver Driver  (optional)
 * returns Message
 * */
-const driverIdDriverPUT = ({ idUnderscoredriver, driver }) => new Promise(
-  async (resolve, reject) => {
-    try {
-      if (!driver) {
-        return reject(Service.rejectResponse('Driver data is required', 400));
-      }
+const driverIdDriverPUT = (params) => new Promise(async (resolve, reject) => {
+  try {
+    const { id_driver, ...driverData } = params;
 
-      const result = await mongoose.connection.db.collection('drivers')
-        .updateOne({ driveNumber: parseInt(idUnderscoredriver) }, { $set: driver });
-
-      if (result.matchedCount === 0) {
-        return reject(Service.rejectResponse('Driver not found', 404));
-      }
-
-      return resolve(Service.successResponse({ message: 'Driver updated successfully' }));
-    } catch (e) {
-      reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+    if (!driverData || Object.keys(driverData).length === 0) {
+      return reject(Service.rejectResponse('Driver data is required', 400));
     }
-  },
-);
+
+    const result = await mongoose.connection.db.collection('drivers')
+      .updateOne(
+        { driverNumber: parseInt(id_driver) },
+        { $set: driverData }
+      );
+
+    if (result.matchedCount === 0) {
+      return reject(Service.rejectResponse('Driver not found', 404));
+    }
+
+    return resolve(Service.successResponse({ message: 'Driver updated successfully' }));
+  } catch (e) {
+    return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+  }
+});
+
 
 /**
 * Get all drivers (URIs)
