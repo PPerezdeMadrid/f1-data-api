@@ -277,24 +277,34 @@ const driversIdRaceGET = ({ id_race, id_driver, team }) => new Promise(
 * idUnderscorerace Integer 
 * returns Message
 * */
-const raceIdRaceDELETE = ({ id_race }) => new Promise(async (resolve, reject) => {
-  try {
-    if (!id_race) {
-      return reject(Service.rejectResponse('Missing id_race parameter', 400));
+
+const raceIdRaceDELETE = ({ id_race }) => new Promise(
+  async (resolve, reject) => {
+    try {
+      // Aseguramos que id_race sea un entero
+      const raceIdInt = parseInt(id_race);
+      if (isNaN(raceIdInt)) {
+        throw new Error('Invalid race id');
+      }
+
+      const result = await mongoose.connection.db.collection('races')
+        .deleteOne({ race_id: raceIdInt }); // aquí usas race_id, no id_race
+
+      if (result.deletedCount === 0) {
+        return reject(Service.rejectResponse('Race not found', 404));
+      }
+
+      return resolve(Service.successResponse({
+        message: 'Race deleted successfully',
+      }));
+
+    } catch (e) {
+      return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
-
-    const result = await mongoose.connection.db.collection('races')
-      .deleteOne({ id_race: parseInt(id_race) });
-
-    if (result.deletedCount === 0) {
-      return reject(Service.rejectResponse('Race not found', 404));
-    }
-
-    return resolve(Service.successResponse({ message: 'Race deleted successfully' }));
-  } catch (e) {
-    return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
   }
-});
+);
+
+
 
 
 
@@ -452,15 +462,23 @@ const racePOST = (race) => new Promise(
     try {
       if (!race) throw new Error('race object is required!');
 
+      // Ignora cualquier race_id que llegue por el body
+      const { raceName, season, raceType } = race;
+
+      
       const lastRace = await mongoose.connection.db.collection('races')
         .find().sort({ race_id: -1 }).limit(1).toArray();
 
       const nextId = lastRace.length > 0 ? lastRace[0].race_id + 1 : 1;
+      const raceData = {
+        race_id: nextId,
+        raceName,
+        season,
+        raceType,
+      };
 
-      race.race_id = nextId;
-
-      const result = await mongoose.connection.db.collection('races').insertOne(race);
-
+      const result = await mongoose.connection.db.collection('races').insertOne(raceData);
+      
       return resolve(Service.successResponse({
         message: 'Race created successfully',
         insertedId: result.insertedId,
@@ -470,7 +488,6 @@ const racePOST = (race) => new Promise(
     }
   }
 );
-
 
 /**
 * Get all races
@@ -598,5 +615,6 @@ module.exports = {
   racePOST,
   racesGET,
   importExternalRaces,
-  importExternalXML
+  importExternalXML,
+  raceIdRaceDELETE
 };
