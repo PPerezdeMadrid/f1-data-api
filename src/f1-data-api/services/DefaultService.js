@@ -457,7 +457,34 @@ const raceIdRacePUT = (params) => new Promise(async (resolve, reject) => {
 * race Race  (optional)
 * returns CreatedResponse
 * */
-const racePOST = (race) => new Promise(
+const racePOST = (params) => new Promise(async (resolve, reject) => {
+  try {
+    const race = params.body || params; // Si viene como { body: { ... } }, extraemos el contenido real
+
+    if (!race || typeof race !== 'object') {
+      return reject(Service.rejectResponse('Race data is required', 400));
+    }
+
+    const lastRace = await mongoose.connection.db.collection('races')
+      .find().sort({ id_race: -1 }).limit(1).toArray();
+
+    const nextId = lastRace.length > 0 ? lastRace[0].id_race + 1 : 0;
+    race.id_race = nextId;
+
+    const result = await mongoose.connection.db.collection('races').insertOne(race);
+
+    return resolve(Service.successResponse({
+      message: 'Race created successfully',
+      insertedId: result.insertedId,
+    }));
+  } catch (e) {
+    return reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
+  }
+});
+
+
+
+/*const racePOST = (race) => new Promise(
   async (resolve, reject) => {
     try {
       if (!race) throw new Error('race object is required!');
@@ -487,7 +514,7 @@ const racePOST = (race) => new Promise(
       reject(Service.rejectResponse(e.message || 'Invalid input', e.status || 405));
     }
   }
-);
+);*/
 
 /**
 * Get all races
