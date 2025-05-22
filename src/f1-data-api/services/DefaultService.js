@@ -542,9 +542,10 @@ const importExternalRaces = ({ season }) => new Promise(
       let count = 0;
       for (const item of items) {
         const simplifiedRace = {
-          season: item.season?.year,
-          raceName: item.name,
-          raceType: "Main Race"
+          season: item.season?.year ?? item.season,
+          raceName: item.grandPrixName ?? item.name ?? item.raceName,
+          raceType: "Main Race",
+          raceId: item.id ?? item.raceId
         };
 
         if (!simplifiedRace.season || !simplifiedRace.raceName) {
@@ -553,7 +554,7 @@ const importExternalRaces = ({ season }) => new Promise(
         }
 
         try {
-          await racePOST({ race: simplifiedRace });
+          await racePOST(simplifiedRace);
           count++;
         } catch (err) {
           console.warn(`Error saving race ${simplifiedRace.raceName}:`, err.message);
